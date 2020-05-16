@@ -1,0 +1,44 @@
+@import 'bootstrap/dist/css/bootstrap';
+
+
+.navbar {
+
+  background-color: black !important;
+
+}
+
+.navbar-brand {
+
+  font-size: 2rem;
+  color: white;
+}
+
+//h1 {
+//
+//  color: red;
+//
+//}
+
+#home-container{
+  margin-top: 5em;
+}
+
+#home-jumbotron{
+  background-image: asset-url("aaron-burden-xG8IQMqMITM-unsplash.jpg");
+  background-size: cover;
+
+}
+
+html,
+body {
+  height: 100%;
+}
+
+#page-content {
+  flex: 1 0 auto;
+  background-color: lightgrey;
+}
+
+#sticky-footer {
+  flex-shrink: none;
+}
