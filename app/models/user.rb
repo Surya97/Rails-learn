@@ -7,9 +7,14 @@ class EmailValidator < ActiveModel::EachValidator
 end
 
 class User < ApplicationRecord
+
+  before_save { self.email = email.downcase }
+
   validates :username, presence: true, length: { minimum: 3, maximum: 25 },
                        uniqueness: { case_sensitive: false }
   validates :email, presence: true, length: { maximum: 105 },
                     uniqueness: { case_sensitive: false }, email: true
   has_many :articles
+
+  has_secure_password
 end
