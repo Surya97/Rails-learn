@@ -1,17 +1,27 @@
-<h1>Showing article details</h1>
+<div class="container">
+	<h1 class="text-center mt-4"><%= @article.title %></h1>
+	<div class="row justify-content-md-center">
+		<div class="col-8 mt-4">
+			<div class="card text-center shadow mb-3 bg-white rounded">
+				<div class="card-header font-italic">
+					by Surya
+				</div>
+				<div class="card-body">
+					<div class="card-text text-left"><%= simple_format(@article.description) %></div>
+					<%= link_to 'Edit', edit_article_path(@article), class: 'btn btn-outline-info' %>
+					<%= link_to 'Delete', article_path(@article), method: :delete, class: 'btn btn-outline-danger',
+											data: {confirm: 'Are you sure?' } %>
+				</div>
+				<div class="card-footer text-muted">
+					<small>Created <%= time_ago_in_words(@article.created_at) %> ago,
+						Updated <%= time_ago_in_words(@article.updated_at) %></small>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row justify-content-center">
+		<%= link_to 'Return to articles list', articles_path%>
+	</div>
+</div>
 
 
-<p><strong>Title: </strong><%= @article.title %></p>
-<p><strong>Description: </strong><%= @article.description %></p>
-
-<p>
-	<%= link_to 'Update article', edit_article_path(@article) %>
-</p>
-
-<p>
-	<%= link_to 'Delete', article_path(@article), method: :delete, data: {confirm: 'Are you sure?' } %>
-</p>
-
-<p>
-	<%= link_to 'Return to articles list', articles_path %>
-</p>
