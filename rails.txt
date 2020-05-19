@@ -1,0 +1,527 @@
+Creating new Rails application:
+rails new <app name>
+
+Run rails server:
+rails s
+(or)
+rails server
+
+The default rails server is called "Puma"
+
+1. MVC and Rails app structure
+
+    General flow:
+    a. Request made at browser
+    b. Request received at router of rails application
+    c. Request routed to appropriate action in controller
+    d. Controller#action either renders a view template or communicates with model
+    e. Model communicates with database
+    f. Model sends back information to controller
+    g. Controller renders view
+
+2. To handle the routes, need to modify the routes.rb file
+    config -> routes.rb
+
+    a. Adding the root route:
+        In routes.rb
+            in the do loop
+                root '<controller name>#<methodname>'  -> If the name of the controller file is abc_controller.rb,
+                 and method name is hello, we specify as
+
+                root 'abc#hello'
+
+    The 'hello' method should render a template
+    def hello
+        render html: 'Hello World!'
+    end
+
+3. Creating new controller
+
+    rails generate controller <name of the controller>
+
+    create the <method_name>.html.erb file in the controller's folder in the views folder.
+    Note: Here we need to specify the plural form
+
+
+Structure of a Rails Application:
+    app-> assets --> store all static assets such as images and style sheets
+    app -> channels --> application_cable --> makes real-time communications available in our rails application (Eg: Broadcasting etc..)
+
+    * Application_controller
+        inherits from ActionController::Base and provides default controller functionality.
+        All controllers created will inherit from Application Controller
+
+    app -> helpers --> Helper methods which are going to use in view templates
+    app -> javascript ->packs -> application.js --> main JS file which makes JS available throughout our application
+            javascript_pack_tag in application.html.erb refers to this "application.js" file
+
+    app -> models --> store all models
+        All models created will extend ApplicationRecord file
+
+    app -> views -> layouts -> application.html.erb --> main layout file for the application -> all our views gets served through from this.
+
+
+    config -> routes.rb --> define all the routes for this application here.
+
+4. Adding a route
+    a. Get request route Eg: 'about' page:
+        get 'about', to: 'pages#about'
+
+
+5. Backend -> Database and Tables
+
+    Rails uses a middle-man called ActiveRecord an ORM(Object Relational Mapper) to communicate between rails application
+    code and the database.
+
+    Scaffold generator:
+
+    Scaffold generator generates these 7 general actions:
+        index, new, edit, show, create, update, destroy
+
+    Used to generate the resource -->Eg:  rails generate scaffold Article title:string description:text
+
+    This creates the controller, the model, the test unit, style sheets, helpers, and views and other remaining things.
+       Invokes active_record and creates a migration file.
+       Creates and provides us a whole bunch of routes.
+
+       Then we need to run the migration file in db->migrate folder using the command:
+
+       rails db:migrate
+
+
+       To know more about existing routes: Check
+
+       rails routes --expanded
+
+     ------------------------------
+     CRUD operations in Rails
+     ------------------------------
+
+     Model name: "article" , then the table name expected is "articles"
+
+     a. Open terminal and create a migration file for the new model, Eg:
+
+        rails generate migration create_articles
+
+        This command creates the table articles but initially it doesn't have any attributes. So, we add them as follows:
+
+                t.string :title
+
+                (attribute type :attribute name)
+
+                Note: Rails runs migrations which are only modified. It doesn't run all migrations all the time.
+
+                Once migration file is modified, run: rails db:migrate
+
+                Note:
+                Now, if we want to add another attribute to the table after migration and again try to run the migrate command, nothing new will be detected. Solution?
+                    a. So, if we want to update a previous migration, then we need to do a rollback of the previous migration and then do a new migration.
+                        rails db:rollback --> This will undo the last migration
+                        Then do,
+                        rails db:migrate
+
+                    b. Preferred Method:
+                        Always create a new migration file for any changes to the database. Eg:
+
+                        rails generate migration add_timestamps_to_articles
+
+                        in the new migration file's change method:
+
+                        If need to add column
+
+                        add_column :<tablename>, :<colName>, :<attribute_datatype>
+
+
+     b. Create a model file to handle the operations on the table
+
+        app -> models -> create new file -> Eg: article.rb -> Extends ApplicationRecord
+
+        ---------------
+        Rails Console
+        ----------------
+        rails c (or) rails console
+
+        Article.all --> gets all records from "articles" table
+        Article.create --> create a new article using the rails console
+
+        Instead of directly calling class to create a new article. We can use a variable. Eg:
+
+        article = Article.new
+        article.title = "second article"
+        article.description = "second article description"
+
+        article.save
+
+
+        * CRUD operations from rails console
+
+        In the above command we have seen how to create a new record and insert into table
+
+        - Read article with specific ID:
+
+            Article.find(<id of the article>)
+
+            i) Read first article -->  Article.first
+            ii) Read last article --> Article.last
+
+
+        - Update
+
+          article = Article.find(2)
+          article.description = "edited- description of second article"
+          article.save
+
+        - Delete
+
+          article = Article.find(2)
+          article.destroy --> directly deletes the entry from the table
+
+
+        Note: We need to write the validations for all the CRUD operations inside the model file
+
+    -------------------------
+    Validations to the model -- adding constraints to the model
+    -------------------------
+    In model file:
+    Eg:
+        validates  :<field_to_be_validated> presence: true  --> makes sure that the field to be validated has value present
+
+        If the .save returns false, we can check the error using:
+
+           article.errors
+           article.errors.full_messages
+
+    -----------------------------
+    Routes, Actions and Views
+    -----------------------------
+    - To get all the routes we want for a particular resource, in config -> routes.rb, specify:
+
+        resources :<resource_name>
+
+    - To get only those routes related to a particular action for that resource,
+
+        resources :<resource_name>, only: [:<action_name>]
+
+        Eg: resources :articles, only: [:show] --> This creates only the show action related routes
+
+        Once the routes are generated, we need to create the corresponding Controller and then inside that we need to define the particular action, then need to create the view for that action.
+
+        Note: All views for a particular controller should be within a folder with the name of the controller's resource.
+
+
+    - Getting variable from the method in controller to the view.
+        -----
+        show view
+        -------
+        Normal variables won't be available for use in the view. So, we need to create an instance variable.
+        Eg:
+        article = Article.find(params[:id]) --> article can't be accessed outside this function.
+        @article = Article.find(params[:id]) --> Can access article outside this function.
+
+        Note: params has all the parameters that are being received by the particular method
+
+        * Using Ruby code inside the view template
+            - Need to use embedded ruby tags
+                <% expression %>  --> Just evaluate the expression between the tags [No display]
+                <%= expression %> --> evaluate the expression and show the result [Display]
+
+
+    - ByeBug --> Rails default debugger
+        add 'byebug' line anywhere to stop the execution and get a debugger console.
+        in console enter 'continue' to exit from byebug.
+
+        --------
+    - Index view
+        -------
+        Eg: resources :articles, only: [:show, :index]
+
+        In controller -->
+
+        def index
+            //do something
+        end
+
+        Create a view named index.html.erb inside views -> <appname>
+
+
+----------------------------
+Creating Form to add new items to the table
+
+For this we need new and create routes. New route needs a view but create route doesn't require.
+
+------
+View for 'New' route
+-------
+We can create a form using ActionView form helpers:
+Note: We are using local: true to specify form_with to do a POST request rather than an AJAX request.
+<%= form_with scope: :article, url: articles_path, local: true do |f|%>
+	<%= f.label :title %><br/>
+	<%= f.text_field :title %><br/><br/>
+	<%= f.label :description %><br/>
+	<%= f.text_area :description %><br/><br/>
+	<%= f.submit %>
+<% end %>
+
+In controller methods, we can render a plain HTML page with some content as follows:
+
+render plain: params[:article]
+
+--------
+Create method
+---------
+* In the controller
+
+@article = Article.new(params[:article])
+
+This would lead to ForbiddenAttributesError, as we have to outlist what we will be using in the params received by this method. This is a security feature.
+Solution:
+
+@article = Article.new(params.require(:article).permit(:title, :description))
+
+* render plain: @article.inspect --> This line prints the article and not the HashCode of the article.
+
+* Once creating a new record is done in the create method, we need to redirect to once save happens:
+
+--> redirect_to <route>
+    Eg: redirect_to article_path(@article) --> Shortcut: redirect_to @article
+
+-----------------------------
+Messaging: validation and flash messages
+-----------------------------
+Right now if the validations fail, then instead of creating the object, it directly returns to the index page without telling anything about the validation error. We need to fix this.
+
+we can use @article.errors to find out if there are any errors
+
+flash messages:
+Once the save is successful, we can use Rails in-built flash messages, to let user know that the new record has been successfully created.
+flash[:notice] = "Article was created successfully"
+
+Note: to warn the user using the flash messages, we can do the following:
+flash[:warn] = "There is some error in the execution"
+------
+Display of flash messages:
+------
+Now we have set the flash message, but still needs to display it. We need to write the display configurations in the 'application.html.erb'
+<% flash.each do |name, message| %>
+    <%= message %>
+<% end %>
+
+---------------------------------------
+Edit and Update from Rails UI
+----------------------------------------
+1. Create the required routes
+2. Now edit is almost similar to 'new' route but we want the fields to be pre-fetched instead of being empty. To do that:
+    <%= form_with(model: @article, local: true) do |f| %>
+
+3. @article.update(params.require(:article).permit(:title, :description))
+
+-----------------------------------------
+Delete item using Rails UI
+-----------------------------------------
+1. Create the delete route --> :destroy
+2. Provide the link to destroy in the index page:
+    <td><%= link_to 'Destroy', <url_path>, method: :<route_verb> %></td>
+    Eg:
+    <td><%= link_to 'Destroy', article_path(article), method: :delete %></td>
+3. Call @article.destroy in the destroy method in controller and then redirect to index page again
+
+4. In delete we can also add popup for confirmation as follows:
+    <td><%= link_to 'Destroy', article_path(article), method: :delete, data: {confirm: 'Are you sure?' } %></td>
+
+-------------------------------------------------------------------------
+Don't repeat yourself (DRY) - Generally, there shouldn't be multiple blocks of the same code in the application
+
+Need to do code refactoring using forms-partial etc...
+
+1. We have multiple locations in the code where we wrote:
+
+    @article = Article.find(params[:id])
+
+    we can move this into a method which is private to the class
+
+    everything mentioned below the 'private' will be private to the class
+
+    private
+
+    def set_article
+        @article = Article.find(params[:id])
+    end
+
+ and call mention this line:
+
+ before_action :set_article, only: [:show, :edit, :update, :delete]
+
+ 2. We have the new.html.erb and edit.html.erb almost similar. So, we need to reduce the redundancy in these:
+
+    Note: file names starting with _ in the views are considered by Rails as partials.
+
+    We can write the repeating code in a partial and then call it as follows:
+
+    Eg: _messages.html.erb --> partial
+
+        <%= render 'layouts/messages' %> --> while referring we don't need to put in "_messages". Rails will understand automatically.
+
+        Note: We need to specify 'layout' folder for 'application.html.erb', but for other views, don't need to specify the folder name, just file name is sufficient.
+
+----------------------------------------------------------------------------------------------------
+Installing Bootstrap in the rails application
+
+See this: https://www.mashrurhossain.com/blog/rails6bootstrap4
+
+1. In Rails 5 there is no separate folder for JavaScript but in Rails 6 there is a separate folder and JavaScript is handled by WebPack.
+2. Installing BootStrap in Rails 6:
+    a. yarn add bootstrap jquery popper.js
+    b. add the boostrap code
+3. Now, we need to let Rails know that we require the "bootstrap.css"
+    In app->assets->stylesheets->application.css
+
+        *= require boostrap
+
+4. Now we need to enable the JavaScript functionality also, as follows:
+        In config->webpack->environment.js
+
+        const webpack = require("webpack")
+
+        environment.plugins.append("Provide", new webpack.ProvidePlugin({
+
+        $: 'jquery',
+
+        jQuery: 'jquery',
+
+        Popper: ['popper.js', 'default']
+
+        }))
+
+        Then, in app->javascript->packs->application.js.add this line to the bottom:
+
+        import "bootstrap"
+
+------------------------------
+Adding custom styles:
+1. Create new file inside app->assets->stylesheets, call it "custom.css.scss"
+    - To modify existing bootstrap CSS classes, add this line at the top:
+        @import 'bootstrap/dist/css/bootstrap';
+
+2. To add images, place them in the images folder and can reference them as follows:
+
+    background-image: asset-url(<image_file_name>)
+
+-------------------------------
+Useful helper method:
+* To get the time ago in words: time_ago_in_words(article.created_at)
+-----------------------------
+Error message display styling:
+
+By default Rails adds a <div> element with id="field_with_errors" whenever there is an error, so we can omit that and style on our own
+
+config->environment.rb --> add this:
+
+ActionView::Base.field_error_proc = Proc.new do |html_tag, instance|
+    html_tag.html_safe
+end
+----------------------------
+To preserve text formatting in the description:
+
+simple_format(@article.description)
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Associations
+------------------
+User and Article tables : Article created by a user, the user_id is a foreign key of Article table referring to the user_id in the User table.
+One user can create multiple articles. So, there is a one-to-many association between Users and Articles tables.
+
+In User model add:
+
+has_many :articles
+
+In Article model add:
+
+belongs_to :user
+
+Note: belongs_to associations must use the singular term.
+
+-------
+Steps to create a new article using user object
+-------
+user_1 = User.first
+
+    1. Article.create(title: "some title", description: "some description", user_id: user_1.id)
+    2. Article.create(title: "some title", description: "some description", user: user_1)
+    3. article = user_1.articles.build(title: "some title", description: "some description")
+        article.save
+
+We can assign a user to an already existing article as follows:
+
+user_1.articles << article
+
+(<<) operator is called "shovel" operator
+
+-------
+To get the user of an article:
+
+article.user
+
+----
+To get the articles of a user:
+
+user.articles
+
+Note: [V.V.imp] --> Now that there is an association between User and Article, we can't create an Article without a user. All existing articles have uesr_id set to null, but
+                    afterwards, we can't create a new article without specifying the user.
+
+--------------------------------
+Alter object state before saving to database:
+
+We can use the "before_save" method in the model
+Eg:
+
+before_save { self.email = email.downcase }
+
+------------------------------------------------------------------------------------------------------------------------
+Authentication System
+
+There is already an existing gem called the 'devise' gem to handle the authentication.
+
+We can also code it from scratch as follows:
+    1. uncomment 'bcrypt' gem in the Gemfile.
+    2. run 'bundle install'
+    3. In User model add,
+        has_secure_password
+    4. add password_digest field to the database table
+
+    5. user.authenticate(<password>) will return entire user object if the password matches the encrypted actual password, else returns false.
+
+Then we need to create "new User" signup form.
+    1. Add route get 'signup', to: 'user#new'
+    2. This throws error because there is no UserController. So, we need to create one.
+    3. Add the 'new' method and 'create' method in the UserController
+    4. Add required views
+    5. Now, we need to generalize the "_errors.html.erb" such that it serves the purpose of both users and articles.
+        So, use 'obj' in place of @article and now we need to define what the 'obj' is:
+
+        So, wherever we are calling <%= render 'shared/errors' %> , we need to specify AS:
+            <%= render 'shared/errors', obj: @article >  --> In articles related views
+            <%= render 'shared/errors', obj: @user >  --> In users related views
+
+    6. Now, we have the error "undefined method 'users_path' "
+        Reason:
+            * We have only specified the route for 'signup' in routes.rb and now the form is looking for the route to submit the form
+
+        Solution:
+            In routes.rb add:
+
+                post 'users', to: 'users#create'
+
+                (or)
+
+                resources :users, except: [:new]
+
+
+* Functionality to edit user details
+
+    In the form, we need to modify the "signup" to "update" based on if the record is new or not
+
+        <%= f.submit(@user.new_record? ? "Sign up!" : "Update user", class: "btn btn-info") %>
+
+* Adding user gravator for the user show page:
+    Refer this: https://en.gravatar.com/site/implement/images/ruby/
